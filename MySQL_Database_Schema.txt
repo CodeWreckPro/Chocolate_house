@@ -1,0 +1,116 @@
+-- Create the database
+CREATE DATABASE IF NOT EXISTS chocolate_house;
+USE chocolate_house;
+
+-- Create Flavors table
+CREATE TABLE flavors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
+    season ENUM('Spring', 'Summer', 'Fall', 'Winter', 'All') NOT NULL,
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create Ingredients table
+CREATE TABLE ingredients (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    quantity DECIMAL(10,2) NOT NULL,
+    unit VARCHAR(20) NOT NULL,
+    min_stock_level DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create Flavor_Ingredients junction table
+CREATE TABLE flavor_ingredients (
+    flavor_id INT,
+    ingredient_id INT,
+    quantity_required DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (flavor_id, ingredient_id),
+    FOREIGN KEY (flavor_id) REFERENCES flavors(id) ON DELETE CASCADE,
+    FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create Customer_Feedback table
+CREATE TABLE customer_feedback (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    suggestion_type ENUM('suggestion', 'allergy') NOT NULL,
+    description TEXT NOT NULL,
+    allergy_concern VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Insert sample seasonal flavors
+INSERT INTO flavors (name, description, season, active) VALUES
+('Winter Peppermint Truffle', 'Dark chocolate with cool peppermint filling', 'Winter', TRUE),
+('Summer Berry Bliss', 'White chocolate with fresh strawberry ganache', 'Summer', TRUE),
+('Autumn Spice Praline', 'Milk chocolate with cinnamon and nutmeg', 'Fall', TRUE),
+('Spring Lavender Dream', 'Dark chocolate with lavender infusion', 'Spring', TRUE),
+('Classic Dark Truffle', 'Pure dark chocolate ganache', 'All', TRUE);
+
+-- Insert sample ingredients
+INSERT INTO ingredients (name, quantity, unit, min_stock_level) VALUES
+('Dark Chocolate', 5000.00, 'grams', 1000.00),
+('Milk Chocolate', 4000.00, 'grams', 800.00),
+('White Chocolate', 3000.00, 'grams', 600.00),
+('Heavy Cream', 2000.00, 'ml', 500.00),
+('Peppermint Extract', 200.00, 'ml', 50.00),
+('Fresh Strawberries', 1500.00, 'grams', 300.00),
+('Ground Cinnamon', 300.00, 'grams', 100.00),
+('Ground Nutmeg', 200.00, 'grams', 50.00),
+('Dried Lavender', 250.00, 'grams', 100.00),
+('Cocoa Powder', 2000.00, 'grams', 500.00);
+
+-- Link flavors with their ingredients
+INSERT INTO flavor_ingredients (flavor_id, ingredient_id, quantity_required) VALUES
+-- Winter Peppermint Truffle
+(1, 1, 100.00),  -- Dark Chocolate
+(1, 5, 5.00),    -- Peppermint Extract
+
+-- Summer Berry Bliss
+(2, 3, 100.00),  -- White Chocolate
+(2, 6, 50.00),   -- Fresh Strawberries
+
+-- Autumn Spice Praline
+(3, 2, 100.00),  -- Milk Chocolate
+(3, 7, 5.00),    -- Ground Cinnamon
+(3, 8, 2.00),    -- Ground Nutmeg
+
+-- Spring Lavender Dream
+(4, 1, 100.00),  -- Dark Chocolate
+(4, 9, 3.00),    -- Dried Lavender
+
+-- Classic Dark Truffle
+(5, 1, 100.00),  -- Dark Chocolate
+(5, 4, 50.00);   -- Heavy Cream
+
+-- Insert sample customer feedback
+INSERT INTO customer_feedback (suggestion_type, description, allergy_concern) VALUES
+('suggestion', 'Would love to see a caramel sea salt flavor!', NULL),
+('allergy', 'Please label nut-free products clearly', 'nuts'),
+('suggestion', 'The Winter Peppermint Truffle is amazing!', NULL),
+('allergy', 'Need more dairy-free options', 'dairy');
+
+-- Create useful views
+CREATE VIEW low_stock_ingredients AS
+SELECT name, quantity, unit, min_stock_level
+FROM ingredients
+WHERE quantity <= min_stock_level;
+
+CREATE VIEW active_seasonal_flavors AS
+SELECT name, description, season
+FROM flavors
+WHERE active = TRUE
+AND season != 'All';
+
+-- Create indexes for better performance
+CREATE INDEX idx_flavors_season ON flavors(season);
+CREATE INDEX idx_ingredients_quantity ON ingredients(quantity);
+CREATE INDEX idx_feedback_type ON customer_feedback(suggestion_type);
+
+-- Example queries to verify the data
+SELECT 'Flavors Count:', COUNT(*) FROM flavors;
+SELECT 'Ingredients Count:', COUNT(*) FROM ingredients;
+SELECT 'Low Stock Items:', COUNT(*) FROM low_stock_ingredients;
+SELECT 'Customer Feedback Count:', COUNT(*) FROM customer_feedback;

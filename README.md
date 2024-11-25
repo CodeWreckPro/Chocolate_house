@@ -43,12 +43,12 @@ python run.py
 ### Method 2: Using Docker
 1. Build the Docker image:
 ```bash
-docker build -t chocolate-house .
+docker build -t chocolate_house .
 ```
 
 2. Run the container:
 ```bash
-docker run -it chocolate-house
+docker run -it chocolate_house
 ```
 
 ## Usage Guide
